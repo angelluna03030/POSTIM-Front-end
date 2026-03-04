@@ -1,0 +1,19 @@
+POSTIM_Front_end/
+├── src/
+│   ├── api/                # Instancia de Axios y funciones de llamada al backend
+│   │   └── mockupApi.ts
+│   ├── assets/             # Estilos globales y logos
+│   ├── components/         # Componentes reutilizables
+│   │   ├── Editor/         # Sliders, selectores de color, botones
+│   │   │   ├── Controls.tsx
+│   │   │   └── ColorPicker.tsx
+│   │   ├── Preview/        # El lienzo donde se ve el diseño en tiempo real
+│   │   │   └── Canvas.tsx
+│   │   └── UI/             # Botones, Sliders de Radix (genéricos)
+│   ├── hooks/              # Lógica de estado del diseño y exportación
+│   │   └── useMockupStore.ts
+│   ├── types/              # Interfaces de TypeScript (MockupSettings, etc.)
+│   └── App.tsx             # Layout principal del editor
+├── public/                 # Imágenes estáticas
+├── tailwind.config.js
+└── tsconfig.json
