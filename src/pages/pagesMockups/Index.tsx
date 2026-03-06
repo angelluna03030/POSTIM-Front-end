@@ -83,7 +83,9 @@ const Index = () => {
           <div className="w-8 h-8 rounded-lg gradient-instagram flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">P</span>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">POSTIM</h1>
+         <a href="/" className="text-2xl font-extrabold gradient-text">
+          POSTIM
+        </a>
         </div>
         <p className="hidden md:block text-sm text-muted-foreground">
           Crea mockups perfectos para Instagram
