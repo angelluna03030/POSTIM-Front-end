@@ -8,7 +8,7 @@ export const VideoSection = () => {
         setPlaying(true);
     };
     return (
-        <section style={{ padding: "96px 0", background: "#ff0000" }} id="ver-tutorial">
+        <section style={{ padding: "96px 0", background: "#fff" }} id="ver-tutorial">
             <div style={{ maxWidth: 960, margin: "0 auto", padding: "0 24px" }}>
                 {/* Header */}
                 <div style={{ textAlign: "center", marginBottom: 48 }}>
