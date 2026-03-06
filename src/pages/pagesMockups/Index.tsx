@@ -26,7 +26,7 @@ const Index = () => {
   const [innerPadding, setInnerPadding] = useState(0);
   const [borderRadius, setBorderRadius] = useState(0);
   const [customBgImage, setCustomBgImage] = useState<string | null>(null);
-  const [textWidget, setTextWidget] = useState({ visible: false, title: "Contacto", subtitle: "Escríbenos un mensaje" });
+  const [textWidget, setTextWidget] = useState({ visible: false, title: "Contacto", subtitle: "Escríbenos un mensaje", x: 0, y: 0 });
 
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -127,8 +127,11 @@ const Index = () => {
             onBgImageUpload={handleBgImageUpload}
             customBgImage={customBgImage}
             textWidget={textWidget}
-            onTextWidgetChange={setTextWidget}
-          />
+            onTextWidgetChange={setTextWidget} bgOpacity={0} onBgOpacityChange={function (v: number): void {
+              throw new Error("Function not implemented.");
+            } } deviceRotation={0} onDeviceRotationChange={function (v: number): void {
+              throw new Error("Function not implemented.");
+            } }          />
         </motion.aside>
 
         <motion.section
@@ -152,8 +155,7 @@ const Index = () => {
             borderRadius={borderRadius}
             customBgImage={customBgImage}
             textWidget={textWidget}
-            onTextWidgetChange={setTextWidget}
-          />
+            onTextWidgetChange={setTextWidget} deviceRotation={0}          />
         </motion.section>
       </main>
     </div>
