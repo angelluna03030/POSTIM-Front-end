@@ -8,10 +8,6 @@ import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
 import Testimonials from "@/components/Testimonial";
 import { VideoSection } from "@/components/Video";
-
-import { Formatos } from "@/components/Formatos";
-
-
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">

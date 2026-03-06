@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import DecorativeDots from "./DecorativeDots";
 import heroMockup from "@/assets/hero-mockup.png";
+import { Link } from "react-router-dom";
 
 
 const HeroSection = () => {
@@ -49,9 +50,11 @@ const HeroSection = () => {
               medidas exactas para cada formato de Instagram.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Button variant="gradient" size="lg" className="rounded-full px-8 gap-2">
-                Empezar Gratis <ArrowRight size={18} />
-              </Button>
+              <Link to="/mockups">
+                <Button variant="gradient" size="lg" className="rounded-full px-8 gap-2">
+                  Empezar Gratis <ArrowRight size={18} />
+                </Button>
+              </Link>
               <a
 
                 href={`#ver-tutorial`}

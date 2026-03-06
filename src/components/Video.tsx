@@ -107,7 +107,7 @@ export const VideoSection = () => {
                             </div>
 
 
-                            <a href="#" onClick={e => e.stopPropagation()} style={{ background: "linear-gradient(90deg,#833AB4,#E1306C,#F77737)", color: "#fff", fontSize: 13, fontWeight: 500, padding: "10px 20px", borderRadius: 100, textDecoration: "none", whiteSpace: "nowrap" }}>
+                            <a href="/mockups" onClick={e => e.stopPropagation()} style={{ background: "linear-gradient(90deg,#833AB4,#E1306C,#F77737)", color: "#fff", fontSize: 13, fontWeight: 500, padding: "10px 20px", borderRadius: 100, textDecoration: "none", whiteSpace: "nowrap" }}>
                                 Probar gratis →
                             </a>
                         </div>

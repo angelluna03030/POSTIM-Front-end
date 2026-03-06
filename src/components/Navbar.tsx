@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,9 +28,11 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:block">
+          <Link to="/mockups">
           <Button variant="gradient" size="default" className="rounded-full px-6">
             Empezar Gratis
           </Button>
+          </Link>
         </div>
 
         <button
@@ -60,10 +63,12 @@ const Navbar = () => {
               {link}
             </a>
           ))}
-              <Button variant="gradient" className="rounded-full">
-                Empezar Gratis
-              </Button>
-            </div>
+                <Link to="/mockups">
+                  <Button variant="gradient" className="rounded-full">
+                    Empezar Gratis
+                  </Button>
+                </Link>
+              </div>
           </motion.div>
         )}
       </AnimatePresence>

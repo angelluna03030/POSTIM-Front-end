@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const CTASection = () => {
   return (
@@ -20,12 +21,14 @@ const CTASection = () => {
             <p className="text-primary-foreground/80 max-w-md mx-auto mb-8 text-lg">
               Empieza a generar contenido profesional para tu Instagram hoy mismo.
             </p>
+            <Link to="/mockups">
             <Button
               size="lg"
               className="rounded-full px-10 gap-2 bg-background text-foreground hover:bg-background/90 font-bold"
             >
               Empezar Ahora <ArrowRight size={18} />
             </Button>
+            </Link>
           </div>
         </motion.div>
       </div>
