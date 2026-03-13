@@ -15,18 +15,20 @@ const aspectRatios: Record<string, { width: number; height: number }> = {
 const Index = () => {
   const [device, setDevice] = useState<DeviceType>("iphone15");
   const [image, setImage] = useState<string | null>(null);
-  const [padding, setPadding] = useState(40);
+  const [padding, setPadding] = useState(10);
   const [background, setBackground] = useState<BackgroundType>("gradient-warm");
   const [frameColor, setFrameColor] = useState("#1a1a1a");
   const [shadow, setShadow] = useState(true);
-  const [shadowSoftness, setShadowSoftness] = useState(50);
+  const [shadowSoftness, setShadowSoftness] = useState(100);
   const [format, setFormat] = useState("portrait");
   const [exporting, setExporting] = useState(false);
-  const [deviceScale, setDeviceScale] = useState(0.85);
+  const [deviceScale, setDeviceScale] = useState(1);
   const [innerPadding, setInnerPadding] = useState(0);
   const [borderRadius, setBorderRadius] = useState(0);
   const [customBgImage, setCustomBgImage] = useState<string | null>(null);
-  const [textWidget, setTextWidget] = useState({ visible: false, title: "Contacto", subtitle: "Escríbenos un mensaje", x: 0, y: 0 });
+const [textWidget, setTextWidget] = useState({ visible: false, title: "Contacto", subtitle: "Escríbenos un mensaje", x: 0, y: 0 });
+
+const canvasRef = useRef<HTMLDivElement>(null);
 
   const previewRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +58,7 @@ const Index = () => {
         pixelRatio: 1,
         cacheBust: true,
         style: {
-          width: `${ratio.width}px`,
+          width: `${ratio.width}px `,
           height: `${ratio.height}px`,
         },
       });

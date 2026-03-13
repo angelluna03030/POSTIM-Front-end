@@ -93,7 +93,7 @@ const ControlPanel = ({
   device, onDeviceChange, onImageUpload,
   padding, onPaddingChange,
   background, onBackgroundChange,
-  bgOpacity, onBgOpacityChange,
+  // bgOpacity, onBgOpacityChange,
   frameColor, onFrameColorChange,
   shadow, onShadowChange,
   shadowSoftness, onShadowSoftnessChange,
