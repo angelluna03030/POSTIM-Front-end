@@ -3,9 +3,11 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import Logo from "@/components/Logo";
+import { useSeo } from "@/hooks/use-seo";
 
 const NotFound = () => {
   const location = useLocation();
+  useSeo({ title: "Página no encontrada | POSTIM", description: "Esta página no existe. Vuelve al inicio o abre el editor de mockups.", path: location.pathname, noindex: true });
 
   useEffect(() => {
     console.error("404: ruta inexistente:", location.pathname);

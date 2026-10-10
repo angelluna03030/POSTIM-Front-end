@@ -41,7 +41,18 @@ export interface DeviceItem {
   adjust: ImageAdjust;
 }
 
-export type TextStyle = "glass" | "notification" | "imessage" | "light" | "dark";
+export type TextStyle =
+  | "glass"
+  | "notification"
+  | "imessage"
+  | "whatsapp"
+  | "igdm"
+  | "comment"
+  | "review"
+  | "pill"
+  | "gradient"
+  | "light"
+  | "dark";
 
 export interface TextItem {
   id: string;
@@ -99,6 +110,12 @@ export const TEXT_PRESETS: Record<TextStyle, Pick<TextItem, "label" | "title" | 
   glass: { label: "", title: "Disponible ya", subtitle: "Descárgala gratis en App Store" },
   notification: { label: "Postim", title: "Tu mockup está listo ✨", subtitle: "Toca para verlo en alta calidad" },
   imessage: { label: "", title: "¡Me encanta el diseño! 😍", subtitle: "¿Ya viste la nueva app?" },
+  whatsapp: { label: "", title: "¡Ya la descargué! 🙌", subtitle: "Mira lo que lanzamos hoy" },
+  igdm: { label: "", title: "Necesito esa app YA 🔥", subtitle: "¿Viste nuestro último post?" },
+  comment: { label: "valentina.design", title: "Esto se ve increíble 😍 ¿Dónde la descargo?", subtitle: "2 h · 1.284 Me gusta" },
+  review: { label: "Mateo R.", title: "La mejor app del año", subtitle: "Fácil, rápida y preciosa. La uso todos los días." },
+  pill: { label: "", title: "✨ Nueva actualización", subtitle: "" },
+  gradient: { label: "", title: "Disponible ya", subtitle: "Descárgala gratis hoy" },
   light: { label: "", title: "Disponible ya", subtitle: "Descárgala gratis en App Store" },
   dark: { label: "", title: "Disponible ya", subtitle: "Descárgala gratis en App Store" },
 };
@@ -317,10 +334,25 @@ export const VIDEO_PRESETS: { value: VideoPreset; label: string; description: st
   { value: "spin", label: "Giro 360°", description: "Cada dispositivo da una vuelta" },
 ];
 
+export type VideoEffect = "none" | "confetti" | "bubbles" | "leaves" | "hearts" | "sparkles" | "snow";
+
+export const VIDEO_EFFECTS: { value: VideoEffect; label: string; emoji: string }[] = [
+  { value: "none", label: "Ninguno", emoji: "∅" },
+  { value: "confetti", label: "Confeti", emoji: "🎉" },
+  { value: "bubbles", label: "Burbujas", emoji: "🫧" },
+  { value: "leaves", label: "Hojas", emoji: "🍂" },
+  { value: "hearts", label: "Corazones", emoji: "❤️" },
+  { value: "sparkles", label: "Destellos", emoji: "✨" },
+  { value: "snow", label: "Nieve", emoji: "❄️" },
+];
+
 export interface VideoSettings {
   preset: VideoPreset;
   duration: number;
   fps: 30 | 60;
+  effect: VideoEffect;
+  /** Cantidad de partículas (0.4 - 1.6) */
+  effectAmount: number;
 }
 
 // ────────────────────────────────────────────
@@ -369,7 +401,7 @@ const PREFS_KEY = "postim:prefs:v1";
 
 export const DEFAULT_PREFS: EditorPrefs = {
   fileFormat: "png",
-  video: { preset: "intro", duration: 5, fps: 60 },
+  video: { preset: "intro", duration: 5, fps: 60, effect: "none", effectAmount: 1 },
   audio: DEFAULT_AUDIO_OPTIONS,
   onboarded: false,
 };
@@ -382,6 +414,7 @@ export const loadPrefs = (): EditorPrefs => {
     const video = { ...DEFAULT_PREFS.video, ...parsed.video };
     // Animaciones que ya no existen vuelven a la predeterminada
     if (!VIDEO_PRESETS.some((p) => p.value === video.preset)) video.preset = DEFAULT_PREFS.video.preset;
+    if (!VIDEO_EFFECTS.some((e) => e.value === video.effect)) video.effect = "none";
     return { ...DEFAULT_PREFS, ...parsed, video, audio: { ...DEFAULT_AUDIO_OPTIONS, ...parsed.audio } };
   } catch {
     return DEFAULT_PREFS;

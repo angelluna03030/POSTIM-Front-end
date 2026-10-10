@@ -7,6 +7,8 @@ import { deviceConfigs } from "@/lib/devices";
 import { CANVAS_FORMATS, type DeviceItem, type MockupSettings, type TextItem, type VideoPreset } from "@/lib/mockup";
 import type { SceneSnapshot } from "@/lib/snapshot";
 import { pickVideoMime } from "@/lib/video";
+import Effects, { type EffectUpdater } from "./Effects";
+import type { VideoEffect } from "@/lib/mockup";
 import { AUDIO_CHANNELS, AUDIO_SAMPLE_RATE, encodeAudioTrack, pickAudioCodec, playAudio, renderAudioTrack, type AudioOptions } from "@/lib/audio";
 
 /**
@@ -280,6 +282,8 @@ interface Layout {
   W: number;
   H: number;
   dist: number;
+  /** Profundidad de las partículas: delante de los dispositivos, detrás de los textos */
+  effectsZ: number;
   devices: DeviceEntry[];
   texts: { item: TextItem; x: number; y: number; z: number; f: number }[];
 }
@@ -322,6 +326,7 @@ const computeLayout = (settings: MockupSettings): Layout => {
     W,
     H,
     dist,
+    effectsZ: front - 0.7,
     devices,
     texts: settings.texts.map((t, i) => {
       const z = front + i * 0.05;
@@ -750,6 +755,7 @@ interface Playback {
 
 interface DirectorProps {
   layout: Layout;
+  effectRef: React.MutableRefObject<EffectUpdater | null>;
   outSize: { width: number; height: number };
   deviceRefs: React.MutableRefObject<(THREE.Group | null)[]>;
   textRefs: React.MutableRefObject<(THREE.Group | null)[]>;
@@ -778,7 +784,7 @@ const pickAvcCodec = async (width: number, height: number, fps: number) => {
   return null;
 };
 
-const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceRefs, textRefs, shadowRefs, onPlayingChange }, ref) => {
+const Director = forwardRef<SceneApi, DirectorProps>(({ layout, effectRef, outSize, deviceRefs, textRefs, shadowRefs, onPlayingChange }, ref) => {
   const { camera, gl, scene } = useThree();
   const playback = useRef<Playback | null>(null);
   const liveAudio = useRef<{ stop: () => void } | null>(null);
@@ -945,6 +951,7 @@ const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceR
       for (let i = 0; i < total; i++) {
         if (cancelled.current || encodeError) break;
         applyAnimation(preset, i / (total - 1));
+        effectRef.current?.(i / fps);
         updateShadows();
         gl.render(scene, camera);
         ctx.drawImage(gl.domElement, 0, 0, width, height);
@@ -1026,13 +1033,21 @@ const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceR
     stop,
   }));
 
+  const idleStart = useRef(performance.now());
+
   useFrame(() => {
     if (manual.current) return;
     const p = playback.current;
+    if (!p) {
+      // Sin reproducir: las partículas se repiten cada 5 s como vista previa
+      effectRef.current?.(((performance.now() - idleStart.current) / 1000) % 5);
+    }
     if (p) {
-      const t = clamp01((performance.now() - p.start) / p.duration);
+      const elapsed = performance.now() - p.start;
+      const t = clamp01(elapsed / p.duration);
       p.onProgress?.(t);
       applyAnimation(p.preset, t);
+      effectRef.current?.(Math.min(elapsed, p.duration) / 1000);
       if (t >= 1) {
         playback.current = null;
         p.done();
@@ -1054,6 +1069,8 @@ interface Scene3DProps {
   /** Ancho en pantalla: se usa para renderizar a la resolución real del formato */
   cssWidth: number;
   onTilt: (id: string, tiltX: number, tiltY: number) => void;
+  effect: VideoEffect;
+  effectAmount: number;
 }
 
 const BackgroundPlane = ({ snapshot, W, H }: { snapshot: SceneSnapshot; W: number; H: number }) => {
@@ -1066,7 +1083,9 @@ const BackgroundPlane = ({ snapshot, W, H }: { snapshot: SceneSnapshot; W: numbe
   );
 };
 
-const Scene3D = forwardRef<SceneApi, Scene3DProps>(({ settings, snapshot, cssWidth, onTilt }, ref) => {
+const Scene3D = forwardRef<SceneApi, Scene3DProps>(({ settings, snapshot, cssWidth, onTilt, effect, effectAmount }, ref) => {
+  const effectRef = useRef<EffectUpdater | null>(null);
+  const registerEffect = useMemo(() => (fn: EffectUpdater | null) => (effectRef.current = fn), []);
   const layout = useMemo(() => computeLayout(settings), [settings]);
   const deviceRefs = useRef<(THREE.Group | null)[]>([]);
   const textRefs = useRef<(THREE.Group | null)[]>([]);
@@ -1117,9 +1136,19 @@ const Scene3D = forwardRef<SceneApi, Scene3DProps>(({ settings, snapshot, cssWid
         <Text3D key={entry.item.id} entry={entry} snap={snapshot.texts[entry.item.id]} W={layout.W} animRef={(g) => (textRefs.current[i] = g)} />
       ))}
 
+      <Effects
+        kind={effect}
+        amount={effectAmount}
+        z={layout.effectsZ}
+        halfW={(layout.W / 2) * ((layout.dist - layout.effectsZ) / layout.dist)}
+        halfH={(layout.H / 2) * ((layout.dist - layout.effectsZ) / layout.dist)}
+        register={registerEffect}
+      />
+
       <Director
         ref={ref}
         layout={layout}
+        effectRef={effectRef}
         outSize={{ width: fmt.width, height: fmt.height }}
         deviceRefs={deviceRefs}
         textRefs={textRefs}

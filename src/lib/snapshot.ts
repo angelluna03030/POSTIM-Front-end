@@ -65,10 +65,20 @@ export const captureScene = async (root: HTMLElement, settings: MockupSettings):
     // El texto se muestra con `zoom`; recuperamos su tamaño natural (base 1080 px)
     const zoom = (canvasWidth / fmt.width) * t.scale;
     const rect = el.getBoundingClientRect();
-    const width = Math.ceil(rect.width / zoom);
-    const height = Math.ceil(rect.height / zoom);
+    // Margen alrededor para que la sombra de la burbuja quepa entera: si se recorta,
+    // en 3D aparece un borde cuadrado alrededor del texto
+    const SHADOW_PAD = 110;
+    const width = Math.ceil(rect.width / zoom) + SHADOW_PAD * 2;
+    const height = Math.ceil(rect.height / zoom) + SHADOW_PAD * 2;
     texts[t.id] = {
-      canvas: await toCanvas(el, { width, height, pixelRatio: 1.5, fontEmbedCSS, filter: hideUi }),
+      canvas: await toCanvas(el, {
+        width,
+        height,
+        pixelRatio: 1.5,
+        fontEmbedCSS,
+        filter: hideUi,
+        style: { padding: `${SHADOW_PAD}px`, boxSizing: "content-box", background: "transparent" },
+      }),
       width,
       height,
     };

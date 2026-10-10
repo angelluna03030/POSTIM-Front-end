@@ -571,6 +571,7 @@ const Index = () => {
       <header className="z-20 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-3 sm:px-4">
         <div className="flex items-center gap-3">
           <Logo />
+          <h1 className="sr-only">Editor de mockups para Instagram</h1>
           <span className="hidden h-4 w-px bg-border md:block" />
           <div className="hidden items-center md:flex">
             <button type="button" onClick={undo} disabled={!canUndo} title="Deshacer (Ctrl+Z)" className={headerBtn}>
@@ -736,6 +737,8 @@ const Index = () => {
                     snapshot={snapshot}
                     loading={snapLoading}
                     onTilt={(id, tiltX, tiltY) => updateItem(id, { tiltX, tiltY })}
+                    effect={prefs.video.effect}
+                    effectAmount={prefs.video.effectAmount}
                   /> : undefined}
             />
           </div>

@@ -1,6 +1,6 @@
 import { forwardRef, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import type { MockupSettings } from "@/lib/mockup";
+import type { MockupSettings, VideoEffect } from "@/lib/mockup";
 import type { SceneSnapshot } from "@/lib/snapshot";
 import type { SceneApi } from "./Scene3D";
 
@@ -20,10 +20,12 @@ interface ThreeStageProps {
   snapshot: SceneSnapshot | null;
   loading: boolean;
   onTilt: (id: string, tiltX: number, tiltY: number) => void;
+  effect: VideoEffect;
+  effectAmount: number;
 }
 
 const ThreeStage = forwardRef<SceneApi, ThreeStageProps>(
-  ({ settings, snapshot, loading, onTilt }, ref) => {
+  ({ settings, snapshot, loading, onTilt, effect, effectAmount }, ref) => {
     const box = useRef<HTMLDivElement>(null);
     const [width, setWidth] = useState(0);
 
@@ -39,7 +41,7 @@ const ThreeStage = forwardRef<SceneApi, ThreeStageProps>(
       <div ref={box} className="relative h-full w-full bg-muted">
         {snapshot && width > 0 && (
           <Suspense fallback={<Spinner label="Cargando motor 3D…" />}>
-            <Scene3D ref={ref} settings={settings} snapshot={snapshot} cssWidth={width} onTilt={onTilt} />
+            <Scene3D ref={ref} settings={settings} snapshot={snapshot} cssWidth={width} onTilt={onTilt} effect={effect} effectAmount={effectAmount} />
           </Suspense>
         )}
         {!snapshot && <Spinner label="Preparando escena 3D…" />}

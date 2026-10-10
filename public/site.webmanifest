@@ -1,0 +1,16 @@
+{
+  "name": "POSTIM · Mockups para Instagram",
+  "short_name": "POSTIM",
+  "description": "Crea mockups para Instagram con celulares, tablets y laptops. Vista 3D, video y medidas exactas para feed, stories y reels.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#E1306C",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -1,81 +1,135 @@
 <!doctype html>
 <html lang="es">
   <head>
-    <!-- ── CHARSET & VIEWPORT ─────────────────────── -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- ── PRIMARY META ───────────────────────────── -->
-    <title>POSTIM - Mockups Perfectos para Instagram</title>
-    <meta name="description" content="Crea mockups profesionales para Instagram con medidas perfectas, dispositivos realistas y fondos atractivos. Exporta listos para publicar." />
-    <meta name="keywords" content="mockup instagram, mockup gratis, creador mockups, mockup movil, instagram stories, reels mockup, diseño instagram" />
+    <!-- ── SEO principal ── -->
+    <title>POSTIM: Mockups para Instagram gratis, en 3D y video</title>
+    <meta
+      name="description"
+      content="Crea mockups para Instagram en segundos: celulares, tablets y laptops con fondos, textos estilo iOS, vista 3D y video. Medidas exactas para feed, stories y reels. Gratis, sin registro y sin marca de agua."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="author" content="POSTIM" />
-    <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#E1306C" />
-    <meta name="color-scheme" content="light" />
+    <meta name="application-name" content="POSTIM" />
     <link rel="canonical" href="https://postim.vercel.app/" />
+    <link rel="alternate" hreflang="es" href="https://postim.vercel.app/" />
+    <link rel="alternate" hreflang="x-default" href="https://postim.vercel.app/" />
 
-    <!-- ── OPEN GRAPH ─ -->
+    <!-- ── Apariencia del navegador ── -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light" />
+
+    <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn, Instagram) ── -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="POSTIM" />
-    <meta property="og:title" content="POSTIM - Mockups Perfectos para Instagram" />
-    <meta property="og:description" content="Crea mockups profesionales para Instagram con medidas perfectas, dispositivos realistas y fondos atractivos. Exporta listos para publicar." />
+    <meta property="og:locale" content="es_LA" />
+    <meta property="og:locale:alternate" content="es_ES" />
     <meta property="og:url" content="https://postim.vercel.app/" />
+    <meta property="og:title" content="POSTIM: Mockups para Instagram gratis, en 3D y video" />
+    <meta
+      property="og:description"
+      content="Celulares, tablets y laptops con fondos, textos estilo iOS, vista 3D y video. Medidas exactas para feed, stories y reels. Gratis y sin marca de agua."
+    />
     <meta property="og:image" content="https://postim.vercel.app/og-image.png" />
+    <meta property="og:image:secure_url" content="https://postim.vercel.app/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="POSTIM - Mockups Perfectos para Instagram" />
-    <meta property="og:locale" content="es_ES" />
+    <meta property="og:image:alt" content="POSTIM: mockups para Instagram en segundos, con un iPhone mostrando un post" />
 
-    <!-- ── TWITTER / X CARD ───────────────────────── -->
+    <!-- ── Twitter / X ── -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@POSTIM" />
-    <meta name="twitter:creator" content="@POSTIM" />
-    <meta name="twitter:title" content="POSTIM - Mockups Perfectos para Instagram" />
-    <meta name="twitter:description" content="Crea mockups profesionales para Instagram con medidas perfectas, dispositivos realistas y fondos atractivos." />
+    <meta name="twitter:title" content="POSTIM: Mockups para Instagram gratis, en 3D y video" />
+    <meta
+      name="twitter:description"
+      content="Celulares, tablets y laptops con fondos, textos estilo iOS, vista 3D y video. Gratis y sin marca de agua."
+    />
     <meta name="twitter:image" content="https://postim.vercel.app/og-image.png" />
-    <meta name="twitter:image:alt" content="POSTIM - Mockups Perfectos para Instagram" />
+    <meta name="twitter:image:alt" content="POSTIM: mockups para Instagram en segundos, con un iPhone mostrando un post" />
 
-    <!-- ── FAVICONS ───────────────────────────────── -->
-    <link rel="icon" type="image/svg+xml" href="https://postim.vercel.app/favicon.ico" />
+    <!-- ── Íconos ── -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#E1306C" />
-    <meta name="msapplication-TileColor" content="#E1306C" />
 
-    <!-- ── PERFORMANCE ────────────────────────────── -->
+    <!-- ── Rendimiento: fuentes sin bloquear el CSS ── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"
+    />
 
-    <!-- ── JSON-LD STRUCTURED DATA ────── -->
+    <!-- ── Datos estructurados ── -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "POSTIM",
-      "url": "https://postim.vercel.app",
-      "description": "Crea mockups profesionales para Instagram con medidas perfectas, dispositivos realistas y fondos atractivos.",
-      "applicationCategory": "DesignApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "author": {
-        "@type": "Organization",
-        "name": "POSTIM"
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://postim.vercel.app/#organization",
+            "name": "POSTIM",
+            "url": "https://postim.vercel.app/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://postim.vercel.app/icon-512.png",
+              "width": 512,
+              "height": 512
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://postim.vercel.app/#website",
+            "url": "https://postim.vercel.app/",
+            "name": "POSTIM",
+            "inLanguage": "es",
+            "publisher": { "@id": "https://postim.vercel.app/#organization" }
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://postim.vercel.app/#app",
+            "name": "POSTIM",
+            "url": "https://postim.vercel.app/mockups",
+            "description": "Generador de mockups para Instagram con celulares, tablets y laptops, fondos, textos estilo iOS, vista 3D y exportación en video.",
+            "applicationCategory": "DesignApplication",
+            "operatingSystem": "Web",
+            "browserRequirements": "Requiere JavaScript y un navegador moderno",
+            "inLanguage": "es",
+            "isAccessibleForFree": true,
+            "image": "https://postim.vercel.app/og-image.png",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "featureList": [
+              "Mockups de iPhone, Pixel, iPad, MacBook y navegador",
+              "Hasta 6 dispositivos por escena",
+              "Formatos 1:1, 4:5, 9:16 y 1.91:1 en 1080 px",
+              "Textos glass estilo iOS, notificaciones e iMessage",
+              "Vista 3D y exportación en video MP4 con audio",
+              "Exportación en PNG, JPG y WebP sin marca de agua"
+            ],
+            "publisher": { "@id": "https://postim.vercel.app/#organization" }
+          }
+        ]
       }
-    }
     </script>
   </head>
 
   <body>
     <div id="root"></div>
+    <!-- Contenido de respaldo para buscadores y navegadores sin JavaScript -->
+    <noscript>
+      <h1>POSTIM: Mockups para Instagram, en segundos</h1>
+      <p>
+        Crea mockups profesionales para Instagram con celulares, tablets y laptops. Elige fondos, agrega textos estilo
+        iOS, gira tus dispositivos en 3D y exporta imágenes o videos con las medidas exactas para feed, stories y reels.
+        Gratis, sin registro y sin marca de agua.
+      </p>
+      <p>Necesitas activar JavaScript para usar el editor.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

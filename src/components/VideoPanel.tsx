@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import { Camera, Music, Trash2, Clapperboard, Film, Loader2, Move3d, Play, RefreshCw, RotateCw, ScanEye, Sparkles, Square, Waves, ZoomIn, MoveHorizontal } from "lucide-react";
-import { VIDEO_PRESETS, type VideoPreset, type VideoSettings } from "@/lib/mockup";
+import { VIDEO_EFFECTS, VIDEO_PRESETS, type VideoPreset, type VideoSettings } from "@/lib/mockup";
 import { pickVideoMime } from "@/lib/video";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -125,6 +125,36 @@ const VideoPanel = ({
             );
           })}
         </div>
+      </Section>
+
+      <Section title="Efectos">
+        <div className="grid grid-cols-4 gap-1.5">
+          {VIDEO_EFFECTS.map((e) => (
+            <button
+              key={e.value}
+              type="button"
+              disabled={busy}
+              onClick={() => onChange({ effect: e.value })}
+              className={cn(
+                "flex flex-col items-center gap-1 rounded-xl border py-2.5 text-[11px] transition-all disabled:opacity-50",
+                video.effect === e.value ? "border-foreground ring-1 ring-foreground" : "border-border text-muted-foreground hover:border-foreground/30",
+              )}
+            >
+              <span className="text-lg leading-none">{e.emoji}</span>
+              {e.label}
+            </button>
+          ))}
+        </div>
+        {video.effect !== "none" && (
+          <div>
+            <div className="mb-2 flex justify-between text-[13px]">
+              <span>Cantidad</span>
+              <span className="font-mono text-xs text-muted-foreground">{Math.round(video.effectAmount * 100)}%</span>
+            </div>
+            <Slider value={[video.effectAmount * 100]} onValueChange={([v]) => onChange({ effectAmount: v / 100 })} min={40} max={160} step={5} disabled={busy} />
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">Se ven en vivo en la vista 3D y se graban en el video.</p>
       </Section>
 
       <Section title="Duración y fluidez">

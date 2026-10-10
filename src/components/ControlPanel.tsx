@@ -87,6 +87,52 @@ const TEXT_STYLES: { value: TextStyle; label: string; preview: React.ReactNode }
       </div>
     ),
   },
+  {
+    value: "whatsapp",
+    label: "WhatsApp",
+    preview: (
+      <div className="flex w-14 flex-col gap-0.5">
+        <span className="h-2 w-8 rounded-sm bg-white shadow-sm" />
+        <span className="h-2 w-9 self-end rounded-sm bg-[#d9fdd3] shadow-sm" />
+      </div>
+    ),
+  },
+  {
+    value: "igdm",
+    label: "DM Instagram",
+    preview: (
+      <div className="flex w-14 flex-col gap-0.5">
+        <span className="h-2 w-8 rounded-full bg-zinc-100" />
+        <span className="h-2 w-9 self-end rounded-full bg-[linear-gradient(90deg,#a033ff,#ff5c87,#ff7b3f)]" />
+      </div>
+    ),
+  },
+  {
+    value: "comment",
+    label: "Comentario",
+    preview: (
+      <div className="flex h-5 w-14 items-center gap-1 rounded-md bg-white px-1 shadow-sm">
+        <span className="h-3 w-3 rounded-full bg-[linear-gradient(45deg,#fcaf45,#e1306c,#833ab4)]" />
+        <span className="h-1 flex-1 rounded bg-zinc-700/50" />
+        <span className="text-[7px] text-red-500">♥</span>
+      </div>
+    ),
+  },
+  {
+    value: "review",
+    label: "Reseña",
+    preview: <span className="text-[9px] leading-none tracking-tighter text-[#ff9f0a]">★★★★★</span>,
+  },
+  {
+    value: "pill",
+    label: "Etiqueta",
+    preview: <div className="h-3.5 w-11 rounded-full border border-white/70 bg-white/50 backdrop-blur" />,
+  },
+  {
+    value: "gradient",
+    label: "Gradiente",
+    preview: <div className="h-4 w-12 rounded-md bg-[linear-gradient(120deg,#833ab4,#e1306c,#fcaf45)]" />,
+  },
   { value: "light", label: "Claro", preview: <div className="h-4 w-12 rounded-md bg-white shadow" /> },
   { value: "dark", label: "Oscuro", preview: <div className="h-4 w-12 rounded-md bg-zinc-900" /> },
 ];
@@ -97,6 +143,12 @@ const FIELD_LABELS: Record<TextStyle, { label?: string; title: string; subtitle:
   glass: { title: "Título", subtitle: "Subtítulo" },
   notification: { label: "Nombre de la app", title: "Título", subtitle: "Mensaje" },
   imessage: { title: "Mensaje enviado (azul)", subtitle: "Mensaje recibido (gris)" },
+  whatsapp: { title: "Mensaje enviado (verde)", subtitle: "Mensaje recibido (blanco)" },
+  igdm: { title: "Mensaje enviado", subtitle: "Mensaje recibido" },
+  comment: { label: "Usuario", title: "Comentario", subtitle: "Tiempo y Me gusta" },
+  review: { label: "Autor", title: "Título de la reseña", subtitle: "Texto de la reseña" },
+  pill: { title: "Texto de la etiqueta", subtitle: "" },
+  gradient: { title: "Título", subtitle: "Subtítulo" },
   light: { title: "Título", subtitle: "Subtítulo" },
   dark: { title: "Título", subtitle: "Subtítulo" },
 };
@@ -853,10 +905,12 @@ const TextPanel = ({ text, onItemChange, onDuplicate, onDelete, settings }: Cont
           <span className="text-xs text-muted-foreground">{labels.title}</span>
           <input type="text" value={text.title} onChange={(e) => set({ title: e.target.value })} className={inputClass} />
         </label>
-        <label className="block space-y-1.5">
-          <span className="text-xs text-muted-foreground">{labels.subtitle}</span>
-          <input type="text" value={text.subtitle} onChange={(e) => set({ subtitle: e.target.value })} className={inputClass} />
-        </label>
+        {labels.subtitle && (
+          <label className="block space-y-1.5">
+            <span className="text-xs text-muted-foreground">{labels.subtitle}</span>
+            <input type="text" value={text.subtitle} onChange={(e) => set({ subtitle: e.target.value })} className={inputClass} />
+          </label>
+        )}
         <Field label="Tamaño" value={`${Math.round(text.scale * 100)}%`} onReset={() => set({ scale: 1 })}>
           <Slider value={[text.scale * 100]} onValueChange={([v]) => set({ scale: v / 100 })} min={40} max={200} step={1} />
         </Field>
