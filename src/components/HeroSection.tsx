@@ -1,90 +1,164 @@
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
-import DecorativeDots from "./DecorativeDots";
-import heroMockup from "@/assets/hero-mockup.png";
+import { lazy, Suspense, useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { ArrowRight, MousePointer2, Play } from "lucide-react";
 
+const HeroScene = lazy(() => import("./three/HeroScene"));
+
+const ease = [0.22, 1, 0.36, 1] as const;
+const WORDS = ["tu feed", "tus stories", "tus reels", "tu portafolio"];
+
+const supportsWebGL = () => {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Palabra que rota. Ocupa su propia línea con altura fija y todas las palabras
+ * se apilan en la misma celda de la grilla, así el resto del título nunca se mueve.
+ */
+const RotatingWord = () => {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setI((v) => (v + 1) % WORDS.length), 2600);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <span className="grid overflow-hidden pb-[0.12em]" aria-live="polite">
+      {/* Reserva la altura de una línea */}
+      <span className="invisible col-start-1 row-start-1">{WORDS[0]}</span>
+      <AnimatePresence initial={false}>
+        <motion.span
+          key={WORDS[i]}
+          initial={{ y: "105%", opacity: 0 }}
+          animate={{ y: "0%", opacity: 1 }}
+          exit={{ y: "-105%", opacity: 0 }}
+          transition={{ duration: 0.6, ease }}
+          className="gradient-text col-start-1 row-start-1 whitespace-nowrap"
+        >
+          {WORDS[i]}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+};
 
 const HeroSection = () => {
+  const [webgl] = useState(supportsWebGL);
+
   return (
-    <section className="relative pt-32 pb-20 overflow-hidden">
-      {/* Floating decorative elements */}
-<div className="absolute top-24 left-8 w-3 h-3 rounded-full bg-instagram-purple animate-pulse-dot" />
-<div className="absolute top-40 left-32 w-2 h-2 rounded-full bg-instagram-yellow animate-pulse-dot" style={{ animationDelay: "0.5s" }} />
-<div className="absolute top-28 right-1/3 w-3 h-3 rounded-full bg-instagram-pink animate-pulse-dot" style={{ animationDelay: "1s" }} />
-<div className="absolute top-16 right-16 w-2 h-2 rounded-full bg-instagram-orange animate-pulse-dot" style={{ animationDelay: "0.3s" }} />
-<div className="absolute top-1/2 left-6 w-2 h-2 rounded-full bg-instagram-orange animate-pulse-dot" style={{ animationDelay: "0.3s" }} />
-<div className="absolute top-1/2 right-20 w-3 h-3 rounded-full bg-instagram-purple animate-pulse-dot" />
-<div className="absolute top-2/3 left-1/4 w-2 h-2 rounded-full bg-instagram-yellow animate-pulse-dot" style={{ animationDelay: "0.5s" }} />
-<div className="absolute top-1/3 right-1/4 w-3 h-3 rounded-full bg-instagram-pink animate-pulse-dot" style={{ animationDelay: "1s" }} />
-<div className="absolute bottom-1/3 right-1/3 w-2 h-2 rounded-full bg-instagram-orange animate-pulse-dot" style={{ animationDelay: "0.3s" }} />
-<div className="absolute bottom-40 left-16 w-2 h-2 rounded-full bg-instagram-orange animate-pulse-dot" style={{ animationDelay: "0.3s" }} />
-<div className="absolute bottom-24 right-24 w-2 h-2 rounded-full bg-instagram-orange animate-pulse-dot" style={{ animationDelay: "0.3s" }} />
-<div className="absolute bottom-16 left-1/2 w-2 h-2 rounded-full bg-instagram-orange animate-pulse-dot" style={{ animationDelay: "0.4s" }} />
+    <section className="relative overflow-hidden pt-28 sm:pt-32">
+      <div className="pointer-events-none absolute inset-0 bg-dots opacity-60 mask-fade-b" />
+      <motion.div
+        aria-hidden
+        animate={{ scale: [1, 1.15, 1], opacity: [0.1, 0.16, 0.1] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute right-[-10%] top-10 h-[560px] w-[760px] rounded-full gradient-bg blur-[140px]"
+      />
 
-      <DecorativeDots className="absolute top-1/2 right-4 opacity-40 hidden lg:grid" />
-      <DecorativeDots className="absolute bottom-5 left-4 opacity-30 hidden lg:grid" />
-
-      <div className="container mx-auto px-4">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left content */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+      <div className="relative mx-auto grid max-w-6xl items-center gap-6 px-5 lg:min-h-[640px] lg:grid-cols-[1fr_1.05fr]">
+        <div className="text-center lg:text-left">
+          <motion.a
+            href="#ver-tutorial"
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.5, ease }}
+            className="mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-background/80 py-1 pl-1 pr-3 text-xs text-muted-foreground backdrop-blur transition-colors hover:text-foreground"
           >
+            <span className="rounded-full bg-foreground px-2 py-0.5 font-medium text-background">Nuevo</span>
+            Vista 3D y exportación en video
+            <ArrowRight className="h-3 w-3" />
+          </motion.a>
 
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-              <span style={{ width: 20, height: 1, background: "#ddd", display: "block" }} />
-              <span style={{ fontSize: 11, fontWeight: 500, color: "#aaa", letterSpacing: "0.12em", textTransform: "uppercase" }}> Herramienta de Mockups</span>
-              <span style={{ width: 20, height: 1, background: "#ddd", display: "block" }} />
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-              Crea Mockups{" "}
-              <span className="gradient-text">Perfectos</span> para
-              Instagram
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-md mb-8">
-              Genera imágenes profesionales con dispositivos, fondos atractivos y
-              medidas exactas para cada formato de Instagram.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/mockups">
-                <Button variant="gradient" size="lg" className="rounded-full px-8 gap-2">
-                  Empezar Gratis <ArrowRight size={18} />
-                </Button>
-              </Link>
-              <a
+          <motion.h1
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05, ease }}
+            className="text-[2.6rem] font-semibold leading-[1.04] tracking-[-0.035em] sm:text-6xl lg:text-[4.1rem]"
+          >
+            Mockups que hacen brillar <RotatingWord />
+          </motion.h1>
 
-                href={`#ver-tutorial`}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Button variant="outline" size="lg" className="rounded-full px-8 gap-2">
-                  <Play size={16} /> Ver Tutorial
-                </Button>
-              </a>
-            </div>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.12, ease }}
+            className="mx-auto mt-6 max-w-md text-lg leading-relaxed text-muted-foreground lg:mx-0"
+          >
+            Sube tus capturas, combina celulares, tablets y laptops en una sola escena y descarga en la medida
+            exacta de Instagram. Sin registro, sin marca de agua.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.18, ease }}
+            className="mt-9 flex flex-col items-center gap-3 sm:flex-row lg:justify-start sm:justify-center"
+          >
+            <Link
+              to="/mockups"
+              className="group relative inline-flex h-12 w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-foreground px-7 text-[15px] font-medium text-background transition-transform active:scale-[0.98] sm:w-auto"
+            >
+              <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+              Crear mockup gratis
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#ver-tutorial"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-border bg-background px-7 text-[15px] font-medium transition-colors hover:bg-muted sm:w-auto"
+            >
+              <Play className="h-3.5 w-3.5 fill-current" />
+              Ver demo
+            </a>
           </motion.div>
 
-          {/* Right image */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="relative flex justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-10 flex items-center justify-center gap-3 lg:justify-start"
           >
-            <div className="relative">
-              <div className="absolute -inset-4 rounded-3xl gradient-bg opacity-10 blur-2xl" />
-              <img
-                src={heroMockup}
-                alt="POSTIM mockup generator preview"
-                className="relative w-full max-w-md rounded-2xl animate-float"
-              />
+            <div className="flex -space-x-2">
+              {["#833ab4", "#e1306c", "#f77737", "#fcaf45"].map((c, i) => (
+                <div
+                  key={c}
+                  className="grid h-8 w-8 place-items-center rounded-full border-2 border-background text-[10px] font-semibold text-white"
+                  style={{ background: c }}
+                >
+                  {["VA", "MR", "SL", "CM"][i]}
+                </div>
+              ))}
             </div>
+            <p className="text-left text-xs leading-tight text-muted-foreground">
+              <span className="font-medium text-foreground">+10.000 creadores</span>
+              <br />
+              ya diseñan con POSTIM
+            </p>
           </motion.div>
         </div>
+
+        {/* ── Escena 3D ── */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.94 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 1, delay: 0.2, ease }}
+          className="relative h-[440px] sm:h-[540px] lg:h-[640px]"
+        >
+          {webgl ? (
+            <Suspense fallback={<div className="absolute inset-0 grid place-items-center"><div className="h-10 w-10 animate-spin rounded-full border-2 border-border border-t-foreground" /></div>}>
+              <HeroScene />
+            </Suspense>
+          ) : null}
+          <div className="pointer-events-none absolute bottom-4 left-1/2 hidden -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1 text-[11px] text-muted-foreground backdrop-blur sm:flex">
+            <MousePointer2 className="h-3 w-3" /> Mueve el mouse
+          </div>
+        </motion.div>
       </div>
+
     </section>
   );
 };

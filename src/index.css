@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,39 +7,38 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 8%;
+    --foreground: 240 10% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 240 10% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 240 10% 4%;
 
-    --primary: 330 80% 55%;
+    --primary: 240 10% 4%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 35 95% 55%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
 
-    --accent: 280 70% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
-    --ring: 330 80% 55%;
+    --border: 240 6% 91%;
+    --input: 240 6% 90%;
+    --ring: 240 5% 65%;
 
     --radius: 0.75rem;
 
-    /* Instagram gradient */
-    --gradient-instagram: linear-gradient(135deg, hsl(280, 70%, 50%), hsl(330, 80%, 55%), hsl(15, 95%, 55%), hsl(35, 95%, 55%));
-    --gradient-instagram-light: linear-gradient(135deg, hsl(280, 70%, 50%, 0.1), hsl(330, 80%, 55%, 0.1), hsl(15, 95%, 55%, 0.1), hsl(35, 95%, 55%, 0.1));
-    
+    /* Acento de marca: se usa con moderación (logo, palabras clave) */
+    --gradient-instagram: linear-gradient(120deg, #833ab4 0%, #e1306c 45%, #f77737 80%, #fcaf45 100%);
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -49,36 +48,6 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-
-  .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 330 80% 55%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 35 95% 55%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
-    --accent: 280 70% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 330 80% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
 }
 
 @layer base {
@@ -86,9 +55,21 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  h1, h2, h3 {
+    @apply tracking-tight;
+  }
+
+  ::selection {
+    background: hsl(330 80% 55% / 0.15);
   }
 }
 
@@ -104,22 +85,24 @@
     background: var(--gradient-instagram);
   }
 
-  .gradient-bg-light {
-    background: var(--gradient-instagram-light);
+  /* Fondo de puntos para lienzos y heros */
+  .bg-dots {
+    background-image: radial-gradient(hsl(240 5% 80%) 1px, transparent 1px);
+    background-size: 18px 18px;
   }
 
-  .gradient-border {
-    border: 2px solid transparent;
-    background-clip: padding-box;
-    position: relative;
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
   }
 
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: -2px;
-    border-radius: inherit;
-    background: var(--gradient-instagram);
-    z-index: -1;
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
   }
 }

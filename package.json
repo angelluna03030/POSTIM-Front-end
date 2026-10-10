@@ -21,7 +21,8 @@
     "doctor": "node project-doctor.mjs",
     "doctor:fix": "node project-doctor.mjs --fix",
     "doctor:deep": "node project-doctor.mjs --deep --fix",
-    "doctor:ci": "node project-doctor.mjs --ci"
+    "doctor:ci": "node project-doctor.mjs --ci",
+     "ok": " bun run build && git add ."
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -52,6 +53,8 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-three/drei": "9.122.0",
+    "@react-three/fiber": "8.18.0",
     "@tanstack/react-query": "^5.90.21",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -62,6 +65,7 @@
     "html-to-image": "^1.11.13",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
+    "mp4-muxer": "5.2.1",
     "next-themes": "^0.3.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
@@ -73,6 +77,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.1",
     "tailwindcss-animate": "^1.0.7",
+    "three": "0.169.0",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },
@@ -84,6 +89,7 @@
     "@types/node": "^22.19.13",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
+    "@types/three": "0.169.0",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.27",
     "depcheck": "^1.4.7",

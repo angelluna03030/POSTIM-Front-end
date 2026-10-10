@@ -1,67 +1,36 @@
-export type BackgroundType = "gradient-warm" | "gradient-instagram" | "mesh" | "solid-light" | "solid-dark" | "custom";
+// Ruido SVG para el efecto "grano"
+const NOISE =
+  "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")";
 
-interface BackgroundConfig {
-  label: string;
-  style: React.CSSProperties;
-  preview: string;
-}
-
-export const backgrounds: Record<Exclude<BackgroundType, "custom">, BackgroundConfig> = {
-  "gradient-warm": {
-    label: "Cálido",
-    style: {
-      background: "linear-gradient(135deg, hsl(30 30% 95%), hsl(24 50% 85%), hsl(340 30% 88%))",
-    },
-    preview: "linear-gradient(135deg, #f5ebe0, #e8b89d, #e8c5d0)",
-  },
-  "gradient-instagram": {
-    label: "Instagram",
-    style: {
-      background: "linear-gradient(135deg, hsl(38 90% 65%), hsl(340 75% 55%), hsl(280 70% 50%))",
-    },
-    preview: "linear-gradient(135deg, #f0a030, #d94080, #8030c0)",
-  },
-  mesh: {
-    label: "Mesh",
-    style: {
-      background: `
-        radial-gradient(at 20% 20%, hsl(340 70% 80%) 0%, transparent 50%),
-        radial-gradient(at 80% 30%, hsl(24 80% 75%) 0%, transparent 50%),
-        radial-gradient(at 50% 80%, hsl(280 50% 75%) 0%, transparent 50%),
-        hsl(30 20% 95%)
-      `,
-    },
-    preview: "radial-gradient(at 30% 30%, #e8a0c0, #f0c0a0)",
-  },
-  "solid-light": {
-    label: "Claro",
-    style: {
-      background: "hsl(30 15% 95%)",
-    },
-    preview: "hsl(30 15% 95%)",
-  },
-  "solid-dark": {
-    label: "Oscuro",
-    style: {
-      background: "hsl(20 10% 12%)",
-    },
-    preview: "hsl(20 10% 12%)",
-  },
-};
-
-export const getBackgroundStyle = (
-  bg: BackgroundType,
-  customBgImage?: string | null
-): React.CSSProperties => {
-  if (bg === "custom" && customBgImage) {
-    return {
-      backgroundImage: `url(${customBgImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    };
-  }
-  if (bg !== "custom" && backgrounds[bg]) {
-    return backgrounds[bg].style;
-  }
-  return { background: "hsl(30 15% 95%)" };
-};
+/** Capas de efectos que van encima del fondo y debajo de los dispositivos */
+export const BackgroundEffects = ({
+  grain,
+  vignette,
+  blur,
+  customBgImage,
+  isCustom,
+}: {
+  grain: number;
+  vignette: number;
+  blur: number;
+  customBgImage: string | null;
+  isCustom: boolean;
+}) => (
+  <>
+    {isCustom && customBgImage && blur > 0 && (
+      <div
+        className="pointer-events-none absolute inset-[-6%]"
+        style={{ backgroundImage: `url(${customBgImage})`, backgroundSize: "cover", backgroundPosition: "center", filter: `blur(${blur}px)` }}
+      />
+    )}
+    {vignette > 0 && (
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: `radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,${vignette / 100}) 100%)` }}
+      />
+    )}
+    {grain > 0 && (
+      <div className="pointer-events-none absolute inset-0 mix-blend-overlay" style={{ backgroundImage: NOISE, opacity: grain / 100 }} />
+    )}
+  </>
+);

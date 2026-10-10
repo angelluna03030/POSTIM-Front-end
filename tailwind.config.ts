@@ -13,7 +13,8 @@ export default {
       },
     },
     fontFamily: {
-      sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+      sans: ['Geist', 'Inter', 'system-ui', 'sans-serif'],
+      mono: ['"Geist Mono"', 'ui-monospace', 'monospace'],
     },
     extend: {
       colors: {
@@ -89,6 +90,10 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
         "pulse-dot": {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
           "50%": { opacity: "0.5", transform: "scale(1.2)" },
@@ -100,6 +105,7 @@ export default {
         "fade-up": "fade-up 0.6s ease-out forwards",
         "float": "float 3s ease-in-out infinite",
         "pulse-dot": "pulse-dot 2s ease-in-out infinite",
+        marquee: "marquee var(--marquee-duration, 60s) linear infinite",
       },
     },
   },
