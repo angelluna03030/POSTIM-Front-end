@@ -5,14 +5,19 @@
  */
 const DB_NAME = "postim";
 const STORE = "images";
+const MEDIA = "media";
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 const openDb = () => {
   if (!dbPromise) {
     dbPromise = new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+      const req = indexedDB.open(DB_NAME, 2);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+        if (!db.objectStoreNames.contains(MEDIA)) db.createObjectStore(MEDIA);
+      };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
@@ -64,5 +69,39 @@ export const syncImages = async (next: ImageMap, prev: ImageMap) => {
     });
   } catch {
     // IndexedDB no disponible (modo privado): las imágenes solo viven en memoria
+  }
+};
+
+// ── Audio del video ──
+export interface StoredAudio {
+  name: string;
+  data: ArrayBuffer;
+}
+
+export const saveAudio = async (audio: StoredAudio | null) => {
+  try {
+    const db = await openDb();
+    await new Promise<void>((resolve, reject) => {
+      const t = db.transaction(MEDIA, "readwrite");
+      if (audio) t.objectStore(MEDIA).put(audio, "audio");
+      else t.objectStore(MEDIA).delete("audio");
+      t.oncomplete = () => resolve();
+      t.onerror = () => reject(t.error);
+    });
+  } catch {
+    // ignorado
+  }
+};
+
+export const loadAudio = async (): Promise<StoredAudio | null> => {
+  try {
+    const db = await openDb();
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(MEDIA, "readonly").objectStore(MEDIA).get("audio");
+      req.onsuccess = () => resolve((req.result as StoredAudio) ?? null);
+      req.onerror = () => reject(req.error);
+    });
+  } catch {
+    return null;
   }
 };

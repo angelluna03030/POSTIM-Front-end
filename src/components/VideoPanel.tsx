@@ -1,7 +1,11 @@
+import { useRef } from "react";
 import { motion } from "framer-motion";
-import { Camera, Clapperboard, Film, Loader2, Move3d, Play, RefreshCw, RotateCw, ScanEye, Sparkles, Square, Waves, ZoomIn, MoveHorizontal } from "lucide-react";
+import { Camera, Music, Trash2, Clapperboard, Film, Loader2, Move3d, Play, RefreshCw, RotateCw, ScanEye, Sparkles, Square, Waves, ZoomIn, MoveHorizontal } from "lucide-react";
 import { VIDEO_PRESETS, type VideoPreset, type VideoSettings } from "@/lib/mockup";
 import { pickVideoMime } from "@/lib/video";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { formatTime, type AudioOptions, type LoadedAudio } from "@/lib/audio";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<VideoPreset, React.ElementType> = {
@@ -26,7 +30,35 @@ interface VideoPanelProps {
   onCapture: () => void;
   onStraighten: () => void;
   onBack: () => void;
+  audio: LoadedAudio | null;
+  audioLoading: boolean;
+  audioOptions: AudioOptions;
+  onAudioOptions: (o: Partial<AudioOptions>) => void;
+  onAudioFile: (file: File) => void;
+  onAudioRemove: () => void;
 }
+
+/** Onda del audio con la parte que entra en el video resaltada */
+const Waveform = ({ audio, start, length }: { audio: LoadedAudio; start: number; length: number }) => {
+  const total = audio.buffer.duration;
+  const from = start / total;
+  const to = Math.min(1, (start + length) / total);
+  return (
+    <div className="relative flex h-12 items-center gap-[2px] overflow-hidden rounded-lg bg-muted px-2">
+      {audio.peaks.map((p, i) => {
+        const pos = i / audio.peaks.length;
+        const inside = pos >= from && pos <= to;
+        return (
+          <span
+            key={i}
+            className={inside ? "flex-1 rounded-full bg-foreground" : "flex-1 rounded-full bg-foreground/20"}
+            style={{ height: `${Math.max(8, p * 100)}%` }}
+          />
+        );
+      })}
+    </div>
+  );
+};
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="border-b border-border px-5 py-5 last:border-b-0">
@@ -35,8 +67,28 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
   </section>
 );
 
-const VideoPanel = ({ video, onChange, status, progress, ready, onPreview, onRecord, onStop, onCapture, onStraighten, onBack }: VideoPanelProps) => {
+const VideoPanel = ({
+  video,
+  onChange,
+  status,
+  progress,
+  ready,
+  onPreview,
+  onRecord,
+  onStop,
+  onCapture,
+  onStraighten,
+  onBack,
+  audio,
+  audioLoading,
+  audioOptions,
+  onAudioOptions,
+  onAudioFile,
+  onAudioRemove,
+}: VideoPanelProps) => {
   const busy = status !== "idle";
+  const fileRef = useRef<HTMLInputElement>(null);
+  const maxStart = audio ? Math.max(0, audio.buffer.duration - (audioOptions.loop ? 0.5 : video.duration)) : 0;
   const format = pickVideoMime();
 
   return (
@@ -102,6 +154,96 @@ const VideoPanel = ({ video, onChange, status, progress, ready, onPreview, onRec
             </button>
           ))}
         </div>
+      </Section>
+
+      <Section title="Audio">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onAudioFile(f);
+            e.target.value = "";
+          }}
+        />
+        {audio ? (
+          <>
+            <div className="flex items-center gap-2.5">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg gradient-bg text-white">
+                <Music className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[13px] font-medium">{audio.name}</div>
+                <div className="text-[11px] text-muted-foreground">{formatTime(audio.buffer.duration)} de duración</div>
+              </div>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={onAudioRemove}
+                aria-label="Quitar audio"
+                className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-destructive disabled:opacity-40"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+            <Waveform audio={audio} start={audioOptions.start} length={video.duration} />
+            <div>
+              <div className="mb-2 flex justify-between text-[13px]">
+                <span>Empieza en</span>
+                <span className="font-mono text-xs text-muted-foreground">{formatTime(audioOptions.start)}</span>
+              </div>
+              <Slider
+                value={[Math.min(audioOptions.start, maxStart)]}
+                onValueChange={([v]) => onAudioOptions({ start: v })}
+                min={0}
+                max={Math.max(0.1, maxStart)}
+                step={0.1}
+                disabled={busy || maxStart <= 0}
+              />
+            </div>
+            <div>
+              <div className="mb-2 flex justify-between text-[13px]">
+                <span>Volumen</span>
+                <span className="font-mono text-xs text-muted-foreground">{audioOptions.volume}%</span>
+              </div>
+              <Slider value={[audioOptions.volume]} onValueChange={([v]) => onAudioOptions({ volume: v })} min={0} max={100} step={1} disabled={busy} />
+            </div>
+            <div className="space-y-2.5 text-[13px]">
+              {(
+                [
+                  ["fadeIn", "Entrada suave (fade in)"],
+                  ["fadeOut", "Salida suave (fade out)"],
+                  ["loop", "Repetir si es más corto"],
+                ] as const
+              ).map(([key, label]) => (
+                <div key={key} className="flex items-center justify-between">
+                  <span>{label}</span>
+                  <Switch checked={audioOptions[key]} disabled={busy} onCheckedChange={(v) => onAudioOptions({ [key]: v })} />
+                </div>
+              ))}
+            </div>
+            <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+              Cambiar audio
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            disabled={busy || audioLoading}
+            onClick={() => fileRef.current?.click()}
+            className="flex w-full items-center gap-3 rounded-xl border border-dashed border-foreground/20 p-3 text-left transition-colors hover:border-foreground/40 hover:bg-muted/50 disabled:opacity-50"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted">
+              {audioLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Music className="h-4 w-4" />}
+            </span>
+            <span>
+              <span className="block text-[13px] font-medium">{audioLoading ? "Cargando audio…" : "Agregar música o audio"}</span>
+              <span className="block text-[11px] text-muted-foreground">MP3, WAV, M4A u OGG</span>
+            </span>
+          </button>
+        )}
       </Section>
 
       <Section title="Grabar">

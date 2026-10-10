@@ -1,6 +1,7 @@
 import { deviceConfigs, type DeviceStyle, type DeviceType } from "@/lib/devices";
 import type { BackgroundType } from "@/lib/backgrounds";
 import { DEFAULT_ADJUST, type ImageAdjust } from "@/lib/image-adjust";
+import { DEFAULT_AUDIO_OPTIONS, type AudioOptions } from "@/lib/audio";
 
 export type CanvasFormat = "square" | "portrait" | "story" | "landscape";
 export type ExportFileFormat = "png" | "jpeg" | "webp";
@@ -360,6 +361,7 @@ export const saveSettings = (settings: MockupSettings) => {
 export interface EditorPrefs {
   fileFormat: ExportFileFormat;
   video: VideoSettings;
+  audio: AudioOptions;
   onboarded: boolean;
 }
 
@@ -368,6 +370,7 @@ const PREFS_KEY = "postim:prefs:v1";
 export const DEFAULT_PREFS: EditorPrefs = {
   fileFormat: "png",
   video: { preset: "intro", duration: 5, fps: 60 },
+  audio: DEFAULT_AUDIO_OPTIONS,
   onboarded: false,
 };
 
@@ -379,7 +382,7 @@ export const loadPrefs = (): EditorPrefs => {
     const video = { ...DEFAULT_PREFS.video, ...parsed.video };
     // Animaciones que ya no existen vuelven a la predeterminada
     if (!VIDEO_PRESETS.some((p) => p.value === video.preset)) video.preset = DEFAULT_PREFS.video.preset;
-    return { ...DEFAULT_PREFS, ...parsed, video };
+    return { ...DEFAULT_PREFS, ...parsed, video, audio: { ...DEFAULT_AUDIO_OPTIONS, ...parsed.audio } };
   } catch {
     return DEFAULT_PREFS;
   }

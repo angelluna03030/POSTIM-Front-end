@@ -7,6 +7,7 @@ import { deviceConfigs } from "@/lib/devices";
 import { CANVAS_FORMATS, type DeviceItem, type MockupSettings, type TextItem, type VideoPreset } from "@/lib/mockup";
 import type { SceneSnapshot } from "@/lib/snapshot";
 import { pickVideoMime } from "@/lib/video";
+import { AUDIO_CHANNELS, AUDIO_SAMPLE_RATE, encodeAudioTrack, pickAudioCodec, playAudio, renderAudioTrack, type AudioOptions } from "@/lib/audio";
 
 /**
  * Escena 3D del editor.
@@ -18,9 +19,20 @@ import { pickVideoMime } from "@/lib/video";
  * - El video se renderiza cuadro por cuadro (WebCodecs + MP4): no se pierden cuadros.
  */
 
+export interface SceneAudio {
+  buffer: AudioBuffer;
+  options: AudioOptions;
+}
+
 export interface SceneApi {
-  play: (preset: VideoPreset, duration: number) => Promise<void>;
-  record: (opts: { preset: VideoPreset; duration: number; fps: number; onProgress?: (p: number) => void }) => Promise<{ blob: Blob; ext: string }>;
+  play: (preset: VideoPreset, duration: number, audio?: SceneAudio | null) => Promise<void>;
+  record: (opts: {
+    preset: VideoPreset;
+    duration: number;
+    fps: number;
+    audio?: SceneAudio | null;
+    onProgress?: (p: number) => void;
+  }) => Promise<{ blob: Blob; ext: string; audioIncluded: boolean }>;
   capture: () => string;
   stop: () => void;
 }
@@ -331,6 +343,94 @@ const metalProps = (d: DeviceItem) =>
       ? { metalness: 0.2, roughness: 0.5, clearcoat: 0 }
       : { metalness: 0.9, roughness: 0.22, clearcoat: 1 };
 
+/**
+ * Lente de cámara trasera. Se dibuja en un marco local donde +z apunta hacia afuera
+ * de la parte trasera del teléfono.
+ */
+const Lens = ({ r, x, y, z, ring }: { r: number; x: number; y: number; z: number; ring: string }) => {
+  const h = r * 0.45;
+  return (
+    <group position={[x, y, z]}>
+      {/* Anillo metálico (cilindro orientado hacia afuera) */}
+      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, h / 2]}>
+        <cylinderGeometry args={[r, r * 1.06, h, 48, 1]} />
+        <meshPhysicalMaterial color={ring} metalness={1} roughness={0.22} clearcoat={1} />
+      </mesh>
+      {/* Vidrio oscuro */}
+      <mesh position={[0, 0, h + 0.0004]}>
+        <circleGeometry args={[r * 0.84, 48]} />
+        <meshPhysicalMaterial color="#04050a" roughness={0.04} metalness={0.3} clearcoat={1} />
+      </mesh>
+      {/* Lente interior con tinte azul */}
+      <mesh position={[0, 0, h + 0.0008]}>
+        <circleGeometry args={[r * 0.46, 48]} />
+        <meshPhysicalMaterial color="#1b2650" roughness={0.08} metalness={0.6} clearcoat={1} />
+      </mesh>
+      <mesh position={[0, 0, h + 0.0012]}>
+        <circleGeometry args={[r * 0.18, 32]} />
+        <meshBasicMaterial color="#020205" />
+      </mesh>
+      {/* Brillo */}
+      <mesh position={[-r * 0.28, r * 0.3, h + 0.0016]}>
+        <circleGeometry args={[r * 0.11, 24]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.6} />
+      </mesh>
+    </group>
+  );
+};
+
+const Dot = ({ r, x, y, z, color }: { r: number; x: number; y: number; z: number; color: string }) => (
+  <mesh position={[x, y, z]}>
+    <circleGeometry args={[r, 32]} />
+    <meshPhysicalMaterial color={color} roughness={0.2} clearcoat={1} />
+  </mesh>
+);
+
+/** Módulo de cámaras del iPhone: cuadrado de vidrio con tres lentes en triángulo, flash y LiDAR */
+const IphoneCameras = ({ w, h, depth, frame }: { w: number; h: number; depth: number; frame: string }) => {
+  const m = w * 0.43;
+  const md = depth * 0.16;
+  const geo = useMemo(() => bodyGeometry(m, m, m * 0.24, md), [m, md]);
+  const r = m * 0.205;
+  const o = m * 0.235;
+  const ring = shade(frame, isLight(frame) ? -0.1 : 0.25);
+  return (
+    // Visto desde atrás queda arriba a la izquierda (en este marco local, x negativa)
+    <group position={[-(w / 2 - w * 0.065 - m / 2), h / 2 - w * 0.065 - m / 2, 0]}>
+      <mesh geometry={geo} position={[0, 0, md / 2]}>
+        <meshPhysicalMaterial attach="material-0" color={shade(frame, -0.06)} roughness={0.12} metalness={0.25} clearcoat={1} />
+        <meshPhysicalMaterial attach="material-1" color={shade(frame, -0.1)} roughness={0.2} metalness={0.6} />
+      </mesh>
+      <Lens r={r} x={-o} y={o} z={md} ring={ring} />
+      <Lens r={r} x={-o} y={-o} z={md} ring={ring} />
+      <Lens r={r} x={o} y={0} z={md} ring={ring} />
+      <Dot r={r * 0.32} x={o} y={o * 1.05} z={md + 0.0005} color="#f5e9c8" />
+      <Dot r={r * 0.24} x={o} y={-o * 1.05} z={md + 0.0005} color="#111318" />
+    </group>
+  );
+};
+
+/** Barra de cámaras del Pixel: cápsula negra de lado a lado con dos lentes y flash */
+const PixelCameras = ({ w, h, depth }: { w: number; h: number; depth: number }) => {
+  const bw = w * 0.9;
+  const bh = w * 0.21;
+  const bd = depth * 0.22;
+  const geo = useMemo(() => bodyGeometry(bw, bh, bh / 2, bd), [bw, bh, bd]);
+  const r = bh * 0.33;
+  return (
+    <group position={[0, h / 2 - w * 0.3, 0]}>
+      <mesh geometry={geo} position={[0, 0, bd / 2]}>
+        <meshPhysicalMaterial attach="material-0" color="#0b0b0d" roughness={0.1} metalness={0.3} clearcoat={1} />
+        <meshPhysicalMaterial attach="material-1" color="#1c1c20" roughness={0.25} metalness={0.7} />
+      </mesh>
+      {/* Visto desde atrás, las lentes quedan a la izquierda */}
+      <Lens r={r} x={-bw * 0.3} y={0} z={bd} ring="#2a2a2e" />
+      <Lens r={r} x={-bw * 0.12} y={0} z={bd} ring="#2a2a2e" />
+      <Dot r={r * 0.28} x={bw * 0.06} y={0} z={bd + 0.0005} color="#f5e9c8" />
+    </group>
+  );
+};
+
 const PhoneModel = ({ entry, screen }: { entry: DeviceEntry; screen?: SceneSnapshot["screens"][string] }) => {
   const { item, w, h, k } = entry;
   const cfg = deviceConfigs[item.type];
@@ -348,6 +448,9 @@ const PhoneModel = ({ entry, screen }: { entry: DeviceEntry; screen?: SceneSnaps
   const metal = metalProps(item);
   const realistic = item.style === "realistic";
   const capColor = realistic ? "#050506" : item.frameColor;
+  const islandW = (item.style === "minimal" ? 72 : 88) * k;
+  const islandH = (item.style === "minimal" ? 20 : 26) * k;
+  const islandGeo = useMemo(() => roundedPlane(islandW, islandH, islandH / 2), [islandW, islandH]);
   const btn = (topPx: number, hPx: number, side: 1 | -1) => (
     <RoundedBox
       key={`${side}${topPx}`}
@@ -380,17 +483,20 @@ const PhoneModel = ({ entry, screen }: { entry: DeviceEntry; screen?: SceneSnaps
 
       {/* Isla dinámica / cámara frontal */}
       {item.type === "iphone15" && item.style !== "clay" && (
-        <RoundedBox
-          args={[(item.style === "minimal" ? 72 : 88) * k, (item.style === "minimal" ? 20 : 26) * k, 0.006]}
-          radius={(item.style === "minimal" ? 10 : 13) * k}
-          smoothness={4}
-          position={[0, h / 2 - (cfg.bezel + 12 + 13) * k, front + 0.006]}
-        >
-          <meshBasicMaterial color="#000" />
-        </RoundedBox>
+        <group position={[0, h / 2 - (cfg.bezel + 12) * k - islandH / 2, front + 0.003]}>
+          <mesh geometry={islandGeo}>
+            <meshBasicMaterial color="#000" />
+          </mesh>
+          {realistic && (
+            <mesh position={[islandW * 0.32, 0, 0.0005]}>
+              <circleGeometry args={[islandH * 0.22, 24]} />
+              <meshPhysicalMaterial color="#1b2650" roughness={0.1} metalness={0.6} clearcoat={1} />
+            </mesh>
+          )}
+        </group>
       )}
       {item.type === "pixel8" && item.style !== "clay" && (
-        <mesh position={[0, h / 2 - (cfg.bezel + 18) * k, front + 0.006]}>
+        <mesh position={[0, h / 2 - (cfg.bezel + 18) * k, front + 0.003]}>
           <circleGeometry args={[6 * k, 24]} />
           <meshBasicMaterial color="#000" />
         </mesh>
@@ -399,38 +505,24 @@ const PhoneModel = ({ entry, screen }: { entry: DeviceEntry; screen?: SceneSnaps
       {/* Botones laterales */}
       {isPhone && item.style !== "clay" && [btn(100, 26, -1), btn(140, 48, -1), btn(196, 48, -1), btn(150, 72, 1)]}
 
-      {/* Parte trasera: tapa de color y módulo de cámaras */}
-      <mesh geometry={backGeo} position={[0, 0, -front - 0.002]} rotation={[0, Math.PI, 0]}>
-        <meshPhysicalMaterial color={item.frameColor} metalness={item.style === "clay" ? 0 : 0.35} roughness={item.style === "clay" ? 0.9 : 0.35} clearcoat={0.6} />
-      </mesh>
-      {item.type === "iphone15" && (
-        <group position={[w / 2 - w * 0.25, h / 2 - w * 0.25, -front - 0.004]} rotation={[0, Math.PI, 0]}>
-          <RoundedBox args={[w * 0.38, w * 0.38, 0.02]} radius={w * 0.08} smoothness={4}>
-            <meshPhysicalMaterial color={item.frameColor} metalness={0.6} roughness={0.2} clearcoat={1} />
-          </RoundedBox>
-          {[
-            [-1, 1],
-            [-1, -1],
-            [1, 0],
-          ].map(([cx, cy], i) => (
-            <mesh key={i} position={[cx * w * 0.085, cy * w * 0.085, 0.015]}>
-              <cylinderGeometry args={[w * 0.06, w * 0.06, 0.02, 32]} />
-              <meshPhysicalMaterial color="#0b0b10" roughness={0.05} clearcoat={1} />
-            </mesh>
-          ))}
-        </group>
-      )}
-      {item.type === "pixel8" && (
-        <RoundedBox args={[w * 0.96, w * 0.2, 0.04]} radius={0.015} position={[0, h / 2 - w * 0.32, -front - 0.01]}>
-          <meshPhysicalMaterial color="#111" metalness={0.5} roughness={0.2} clearcoat={1} />
-        </RoundedBox>
-      )}
-      {item.type === "ipad" && (
-        <mesh position={[w / 2 - w * 0.1, h / 2 - w * 0.1, -front - 0.006]}>
-          <circleGeometry args={[w * 0.035, 24]} />
-          <meshBasicMaterial color="#0b0b10" side={THREE.BackSide} />
+      {/* Parte trasera: tapa de color y cámaras (marco local girado: +z hacia afuera) */}
+      <group position={[0, 0, -front - 0.001]} rotation={[0, Math.PI, 0]}>
+        <mesh geometry={backGeo}>
+          <meshPhysicalMaterial
+            color={item.frameColor}
+            metalness={item.style === "clay" ? 0 : 0.3}
+            roughness={item.style === "clay" ? 0.9 : realistic ? 0.45 : 0.35}
+            clearcoat={item.style === "clay" ? 0 : 0.5}
+          />
         </mesh>
-      )}
+        {item.type === "iphone15" && <IphoneCameras w={w} h={h} depth={depth} frame={item.frameColor} />}
+        {item.type === "pixel8" && <PixelCameras w={w} h={h} depth={depth} />}
+        {item.type === "ipad" && (
+          <group position={[-(w / 2 - w * 0.09), h / 2 - w * 0.09, 0]}>
+            <Lens r={w * 0.03} x={0} y={0} z={0} ring={shade(item.frameColor, -0.15)} />
+          </group>
+        )}
+      </group>
     </group>
   );
 };
@@ -446,7 +538,7 @@ const ScreenMesh = ({ geometry, screen, z }: { geometry: THREE.BufferGeometry; s
 };
 
 const MacbookModel = ({ entry, screen }: { entry: DeviceEntry; screen?: SceneSnapshot["screens"][string] }) => {
-  const { item, w, h, k } = entry;
+  const { item, h, k } = entry;
   const cfg = deviceConfigs.macbook;
   const metal = metalProps(item);
   const realistic = item.style === "realistic";
@@ -689,6 +781,7 @@ const pickAvcCodec = async (width: number, height: number, fps: number) => {
 const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceRefs, textRefs, shadowRefs, onPlayingChange }, ref) => {
   const { camera, gl, scene } = useThree();
   const playback = useRef<Playback | null>(null);
+  const liveAudio = useRef<{ stop: () => void } | null>(null);
   const manual = useRef(false);
   const cancelled = useRef(false);
   const tmp = useMemo(() => ({ q: new THREE.Quaternion(), e: new THREE.Euler(), v: new THREE.Vector3() }), []);
@@ -806,6 +899,8 @@ const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceR
 
   const stop = () => {
     cancelled.current = true;
+    liveAudio.current?.stop();
+    liveAudio.current = null;
     const p = playback.current;
     playback.current = null;
     resetAnim();
@@ -814,12 +909,21 @@ const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceR
   };
 
   /** Exportación cuadro por cuadro a MP4 (WebCodecs) */
-  const recordFrames = async (preset: VideoPreset, duration: number, fps: number, onProgress?: (p: number) => void) => {
+  const recordFrames = async (preset: VideoPreset, duration: number, fps: number, audio?: SceneAudio | null, onProgress?: (p: number) => void) => {
     const { width, height } = outSize;
     const config = await pickAvcCodec(width, height, fps);
     if (!config) return null;
 
-    const muxer = new Muxer({ target: new ArrayBufferTarget(), video: { codec: "avc", width, height, frameRate: fps }, fastStart: "in-memory" });
+    // Audio: se mezcla offline con la duración exacta del video
+    const audioCodec = audio ? await pickAudioCodec() : null;
+    const audioTrack = audio && audioCodec ? await renderAudioTrack(audio.buffer, audio.options, duration) : null;
+
+    const muxer = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: { codec: "avc", width, height, frameRate: fps },
+      audio: audioTrack && audioCodec ? { codec: audioCodec.muxCodec, numberOfChannels: AUDIO_CHANNELS, sampleRate: AUDIO_SAMPLE_RATE } : undefined,
+      fastStart: "in-memory",
+    });
     let encodeError: unknown = null;
     const encoder = new VideoEncoder({
       output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
@@ -853,8 +957,11 @@ const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceR
       }
       await encoder.flush();
       if (encodeError) throw encodeError;
+      if (audioTrack && audioCodec) {
+        await encodeAudioTrack(audioTrack, audioCodec.config, (chunk, meta) => muxer.addAudioChunk(chunk, meta));
+      }
       muxer.finalize();
-      return { blob: new Blob([muxer.target.buffer], { type: "video/mp4" }), ext: "mp4" };
+      return { blob: new Blob([muxer.target.buffer], { type: "video/mp4" }), ext: "mp4", audioIncluded: !!audioTrack };
     } finally {
       if (encoder.state !== "closed") encoder.close();
       manual.current = false;
@@ -864,12 +971,20 @@ const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceR
   };
 
   /** Respaldo: grabación en tiempo real con MediaRecorder */
-  const recordRealtime = async (preset: VideoPreset, duration: number, fps: number, onProgress?: (p: number) => void) => {
+  const recordRealtime = async (preset: VideoPreset, duration: number, fps: number, audio?: SceneAudio | null, onProgress?: (p: number) => void) => {
     const format = pickVideoMime();
     if (!format) throw new Error("Tu navegador no permite grabar video");
     resetAnim();
     gl.render(scene, camera);
     const stream = gl.domElement.captureStream(fps);
+    let live: ReturnType<typeof playAudio> | null = null;
+    if (audio) {
+      live = playAudio(audio.buffer, audio.options, duration, (ctx) => {
+        const dest = ctx.createMediaStreamDestination();
+        dest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
+        return dest;
+      });
+    }
     const recorder = new MediaRecorder(stream, { mimeType: format.mime, videoBitsPerSecond: 18_000_000 });
     const chunks: Blob[] = [];
     recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
@@ -880,18 +995,23 @@ const Director = forwardRef<SceneApi, DirectorProps>(({ layout, outSize, deviceR
     recorder.stop();
     await finished;
     stream.getTracks().forEach((t) => t.stop());
+    live?.stop();
     stop();
-    return { blob: new Blob(chunks, { type: format.mime.split(";")[0] }), ext: format.ext };
+    return { blob: new Blob(chunks, { type: format.mime.split(";")[0] }), ext: format.ext, audioIncluded: !!audio };
   };
 
   useImperativeHandle(ref, () => ({
-    play: (preset, duration) => play(preset, duration).then(stop),
-    record: async ({ preset, duration, fps, onProgress }) => {
+    play: (preset, duration, audio) => {
+      liveAudio.current?.stop();
+      liveAudio.current = audio ? playAudio(audio.buffer, audio.options, duration) : null;
+      return play(preset, duration).then(stop);
+    },
+    record: async ({ preset, duration, fps, audio, onProgress }) => {
       if (typeof VideoEncoder !== "undefined") {
-        const result = await recordFrames(preset, duration, fps, onProgress);
+        const result = await recordFrames(preset, duration, fps, audio, onProgress);
         if (result) return result;
       }
-      return recordRealtime(preset, duration, fps, onProgress);
+      return recordRealtime(preset, duration, fps, audio, onProgress);
     },
     capture: () => {
       resetAnim();

@@ -14,7 +14,8 @@ import type { SceneApi } from "@/components/three/Scene3D";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useUndoable } from "@/hooks/use-undoable";
-import { BG_KEY, loadImages, syncImages, type ImageMap } from "@/lib/image-store";
+import { BG_KEY, loadAudio, loadImages, saveAudio, syncImages, type ImageMap } from "@/lib/image-store";
+import { computePeaks, decodeAudio, type LoadedAudio } from "@/lib/audio";
 import { captureScene, getFontCss, hideUi, type SceneSnapshot } from "@/lib/snapshot";
 import {
   CANVAS_FORMATS,
@@ -79,6 +80,8 @@ const Index = () => {
   const storedImages = useRef<ImageMap>({});
   const imagesLoaded = useRef(false);
   const previewing = useRef(false);
+  const [audio, setAudio] = useState<LoadedAudio | null>(null);
+  const [audioLoading, setAudioLoading] = useState(false);
   const [busy, setBusy] = useState<"export" | "copy" | null>(null);
   const [copied, setCopied] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -111,6 +114,41 @@ const Index = () => {
     storedImages.current = next;
     syncImages(next, prev);
   }, [images, customBgImage, settings.devices]);
+
+  // ── Audio del video (también en IndexedDB) ──
+  const loadAudioData = useCallback(async (name: string, data: ArrayBuffer) => {
+    // decodeAudioData consume el buffer: se decodifica una copia
+    const buffer = await decodeAudio(data.slice(0));
+    setAudio({ name, buffer, peaks: computePeaks(buffer) });
+  }, []);
+
+  useEffect(() => {
+    loadAudio().then((stored) => {
+      if (stored) loadAudioData(stored.name, stored.data).catch(() => saveAudio(null));
+    });
+  }, [loadAudioData]);
+
+  const handleAudioFile = async (file: File) => {
+    if (!file.type.startsWith("audio/") && !/\.(mp3|wav|m4a|ogg|aac|flac)$/i.test(file.name)) {
+      toast.error("Ese archivo no es de audio");
+      return;
+    }
+    setAudioLoading(true);
+    try {
+      const data = await file.arrayBuffer();
+      await loadAudioData(file.name, data);
+      setPrefs((p) => ({ ...p, audio: { ...p.audio, start: 0 } }));
+      saveAudio({ name: file.name, data });
+      toast.success("Audio agregado");
+    } catch (err) {
+      console.error("Audio decode failed:", err);
+      toast.error("No se pudo leer ese audio", { description: "Prueba con un MP3 o WAV." });
+    } finally {
+      setAudioLoading(false);
+    }
+  };
+
+  const sceneAudio = audio ? { buffer: audio.buffer, options: prefs.audio } : null;
 
   const closeTour = useCallback(() => {
     setTourOpen(false);
@@ -400,7 +438,7 @@ const Index = () => {
       if (p < 1 && previewing.current) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-    await sceneApi.current.play(prefs.video.preset, prefs.video.duration);
+    await sceneApi.current.play(prefs.video.preset, prefs.video.duration, sceneAudio);
     previewing.current = false;
     setVideoStatus("idle");
   };
@@ -410,12 +448,15 @@ const Index = () => {
     setVideoStatus("recording");
     setVideoProgress(0);
     try {
-      const { blob, ext } = await sceneApi.current.record({ ...prefs.video, onProgress: setVideoProgress });
+      const { blob, ext, audioIncluded } = await sceneApi.current.record({ ...prefs.video, audio: sceneAudio, onProgress: setVideoProgress });
       const { width, height } = CANVAS_FORMATS[settings.format];
       const url = URL.createObjectURL(blob);
       downloadUrl(url, `postim-${prefs.video.preset}-${width}x${height}.${ext}`);
       setTimeout(() => URL.revokeObjectURL(url), 10_000);
-      toast.success("Video descargado", { description: `${prefs.video.duration}s · ${prefs.video.fps} fps · ${ext.toUpperCase()}` });
+      toast.success("Video descargado", {
+        description: `${prefs.video.duration}s · ${prefs.video.fps} fps · ${ext.toUpperCase()}${audioIncluded ? " · con audio" : ""}`,
+      });
+      if (audio && !audioIncluded) toast.warning("Tu navegador no pudo incluir el audio en este video");
     } catch (err) {
       console.error("Record failed:", err);
       toast.error("No se pudo grabar el video");
@@ -638,6 +679,15 @@ const Index = () => {
                 setSettings((s) => ({ ...s, devices: s.devices.map((d) => ({ ...d, tiltX: 0, tiltY: 0 })) }))
               }
               onBack={() => setView("2d")}
+              audio={audio}
+              audioLoading={audioLoading}
+              audioOptions={prefs.audio}
+              onAudioOptions={(o) => setPrefs((p) => ({ ...p, audio: { ...p.audio, ...o } }))}
+              onAudioFile={handleAudioFile}
+              onAudioRemove={() => {
+                setAudio(null);
+                saveAudio(null);
+              }}
             />
           ) : (
           <ControlPanel
